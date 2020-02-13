@@ -206,6 +206,8 @@ function CB_GetDirFiles($path) {
 		closedir($dir);
 	}
 
+	uksort($result, "strnatcasecmp");
+
 	return $result;
 }
 
@@ -235,6 +237,8 @@ function CB_GetDBFiles($pid, $fordiff = true) {
 			"created"      => $row->created,
 		);
 	}
+
+	uksort($result, "strnatcasecmp");
 
 	return $result;
 }

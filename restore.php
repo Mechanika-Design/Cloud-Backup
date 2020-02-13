@@ -135,11 +135,11 @@ function PathStackToStr($stack) {
 }
 
 function CalculateRealpath($path) {
-	global $pathstack, $db;
+	global $rootpathstack, $pathstack, $db;
 
 	$path = str_replace("\\", "/", $path);
 	if (substr($path, 0, 1) === "/") {
-		$result = array(array("id" => 0, "name" => ""));
+		$result = $rootpathstack;
 	} else {
 		$result = $pathstack;
 	}
@@ -158,7 +158,7 @@ function CalculateRealpath($path) {
 		} else {
 			try {
 				$row = $db->GetRow("SELECT", array(
-					"id, name, symlink, attributes",
+					"*",
 					"FROM"  => "?",
 					"WHERE" => "pid = ? AND name = ?"
 				), "files", $result[count($result) - 1]["id"], $part);
@@ -202,6 +202,8 @@ function CalculateRealpath($path) {
 						"info"      => $result
 					);
 				}
+
+				$result[] = array("id" => $row->id, "name" => $row->name, "file" => $row);
 			}
 		}
 	}
@@ -224,7 +226,10 @@ if ($dir !== false) {
 require_once $rootpath . "/support/cli.php";
 
 echo "Ready.  This is a command-line interface.  Enter 'help' to get a list of available commands.\n\n";
-$pathstack = array(array("id" => 0, "name" => ""));
+
+$rootid        = (int) $db->GetOne("SELECT", array("id", "FROM" => "?", "WHERE" => "pid = 0 AND name = ''"), "files");
+$rootpathstack = array(array("id" => $rootid, "name" => ""));
+$pathstack     = $rootpathstack;
 echo $servicename . " [" . $backupnum . "]:" . PathStackToStr($pathstack) . ">";
 while (($line = fgets(STDIN)) !== false) {
 	$line = trim($line);
