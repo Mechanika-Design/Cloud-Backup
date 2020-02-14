@@ -44,6 +44,7 @@ function CB_SendNotificationEmail($notificationinfo, $htmlmsg, $textmsg) {
 		"headers"     => $headers,
 		"htmlmessage" => $htmlmsg,
 		"textmessage" => $textmsg,
+		"usemail" => $notificationinfo["usemail"],
 		"server"      => $notificationinfo["server"],
 		"port"        => $notificationinfo["port"],
 		"secure"      => $notificationinfo["secure"],

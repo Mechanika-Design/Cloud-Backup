@@ -54,29 +54,29 @@ function shell_cmd_ls($line) {
 
 		return;
 	}
-	$path = $result["path"];
+	$path    = $result["path"];
 	$dirinfo = $result["dir"][count($result["dir"]) - 1];
-	$id = $dirinfo["id"];
+	$id      = $dirinfo["id"];
 
-	if (!isset($dirinfo["file"]))  $dirfiles = CB_GetDBFiles($id, false);
-	else
-	{
+	if (!isset($dirinfo["file"])) {
+		$dirfiles = CB_GetDBFiles($id, false);
+	} else {
 		// Handle extraction of a single file.
 		$row = $dirinfo["file"];
 
-		$dirfiles = array();
+		$dirfiles             = array();
 		$dirfiles[$row->name] = array(
-			"id" => $row->id,
-			"blocknum" => $row->blocknum,
-			"sharedblock" => (int)$row->sharedblock,
-			"name" => $row->name,
-			"symlink" => $row->symlink,
-			"attributes" => (int)$row->attributes,
-			"owner" => $row->owner,
-			"group" => $row->group,
-			"filesize" => $row->realfilesize,
+			"id"           => $row->id,
+			"blocknum"     => $row->blocknum,
+			"sharedblock"  => (int) $row->sharedblock,
+			"name"         => $row->name,
+			"symlink"      => $row->symlink,
+			"attributes"   => (int) $row->attributes,
+			"owner"        => $row->owner,
+			"group"        => $row->group,
+			"filesize"     => $row->realfilesize,
 			"lastmodified" => $row->lastmodified,
-			"created" => $row->created,
+			"created"      => $row->created,
 		);
 
 		$id = $row->pid;
@@ -192,7 +192,7 @@ function shell_cmd_ls($line) {
 					}
 
 					// Output:  Attributes Owner Group Created Filesize[ Blocknum]
-					echo $attr . " " . sprintf("%-" . $maxowner . "s", $info["owner"]) . " " . sprintf("%-" . $maxgroup . "s", $info["group"]) . " " . sprintf("%" . $maxfullsize . "s", number_format($info["filesize"], 0)) . ($blocks ? " " . $info["blocknum"] : "") . " " . date("Y-M-d h:i A", $info["created"]) . "  ";
+					echo $attr . " " . sprintf("%-" . $maxowner . "s", $info["owner"]) . " " . sprintf("%-" . $maxgroup . "s", $info["group"]) . " " . sprintf("%" . $maxfullsize . "s", number_format($info["filesize"], 0)) . ($blocks ? " " . sprintf("%" . $maxblocknumsize . "s", $info["blocknum"]) : "") . " " . date("Y-M-d h:i A", $info["created"]) . "  ";
 				}
 
 				echo $name;
@@ -261,8 +261,7 @@ function shell_cmd_cd($line) {
 
 	$dirinfo = $result["dir"][count($result["dir"]) - 1];
 
-	if (isset($dirinfo["file"]))
-	{
+	if (isset($dirinfo["file"])) {
 		CB_DisplayError("The specified path '" . $path . "' is a file.", false, false);
 
 		return;
@@ -275,22 +274,63 @@ function shell_cmd_chdir($line) {
 	shell_cmd_cd($line);
 }
 
-function shell_cmd_restore($line) {
+function shell_cmd_stats($line) {
+	global $db;
+
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules" => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args = ParseCommandLine($options, $line);
+
+	if (count($args["params"]) > 0 || isset($args["opts"]["help"]))
+		{
+			echo $args["file"] . " - Stats command\n";
+			echo "Purpose:  Display database-wide statistics.\n";
+			echo "\n";
+			echo "Syntax:  " . $args["file"] . " [options]\n";
+			echo "Options:\n";
+			echo "\t-?   This help documentation.\n";
+			echo "\n";
+			echo "Example:  " . $args["file"] . " /\n";
+
+			return;
+	}
+
+	$numfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 0"), "files");
+	$numsharedfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 1"), "files");
+	$numsharedblocks = (int)$db->GetOne("SELECT", array("COUNT(DISTINCT blocknum)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 1"), "files");
+	$numemptyfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 1"), "files");
+	$numsymlinks = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink <> ''"), "files");
+	$numdirs = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink = ''"), "files");
+
+	echo "Symlinks:  " . number_format($numsymlinks, 0) . "\n";
+	echo "Folders:  " . number_format($numdirs, 0) . "\n";
+	echo "Files:\n";
+	echo "\t" . number_format($numsharedfiles, 0) . " shared (" . number_format($numsharedblocks, 0) . " blocks)\n";
+	echo "\t" . number_format($numfiles, 0) . " non-shared\n";
+	echo "\t" . number_format($numemptyfiles, 0) . " empty\n";
+	echo "\t" . number_format($numsharedfiles + $numfiles + $numemptyfiles, 0) . " total (" . number_format($numsharedblocks + $numfiles, 0) . " blocks)\n";
+	echo "\n";
+}
+
+function shell_cmd_restore($line)
+{
 	global $rootpath, $blocklist, $servicehelper, $config, $cb_messages;
 
-	if (is_array($line)) {
-		$args = $line;
-	} else {
-		$options = array(
-			"shortmap" => array(
-				"?" => "help"
-			),
-			"rules"    => array(
-				"help" => array("arg" => false)
-			)
-		);
-		$args    = ParseCommandLine($options, $line);
-	}
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules" => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args = ParseCommandLine($options, $line);
 
 	if (count($args["params"]) > 1 || isset($args["opts"]["help"])) {
 		echo $args["file"] . " - Restore command\n";

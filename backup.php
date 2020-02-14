@@ -72,6 +72,11 @@ $service      = $result["service"];
 $incrementals = $result["incrementals"];
 $lastbackupid = $result["summary"]["lastbackupid"];
 
+$services = CB_GetBackupServices();
+if (isset($services[$servicename])) {
+	$servicename = $services[$servicename];
+}
+
 // Merge down incrementals.
 while (count($incrementals) > $config["numincrementals"] + 1) {
 	echo "Merging down one incremental (" . count($incrementals) . " > " . ($config["numcrementals"] + 1) . ")...\n";
