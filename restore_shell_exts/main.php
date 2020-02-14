@@ -281,32 +281,55 @@ function shell_cmd_stats($line) {
 		"shortmap" => array(
 			"?" => "help"
 		),
-		"rules" => array(
+		"rules"    => array(
 			"help" => array("arg" => false)
 		)
 	);
-	$args = ParseCommandLine($options, $line);
+	$args    = ParseCommandLine($options, $line);
 
-	if (count($args["params"]) > 0 || isset($args["opts"]["help"]))
-		{
-			echo $args["file"] . " - Stats command\n";
-			echo "Purpose:  Display database-wide statistics.\n";
-			echo "\n";
-			echo "Syntax:  " . $args["file"] . " [options]\n";
-			echo "Options:\n";
-			echo "\t-?   This help documentation.\n";
-			echo "\n";
-			echo "Example:  " . $args["file"] . " /\n";
+	if (count($args["params"]) > 0 || isset($args["opts"]["help"])) {
+		echo $args["file"] . " - Stats command\n";
+		echo "Purpose:  Display database-wide statistics.\n";
+		echo "\n";
+		echo "Syntax:  " . $args["file"] . " [options]\n";
+		echo "Options:\n";
+		echo "\t-?   This help documentation.\n";
+		echo "\n";
+		echo "Example:  " . $args["file"] . "\n";
 
-			return;
+		return;
 	}
 
-	$numfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 0"), "files");
-	$numsharedfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 1"), "files");
-	$numsharedblocks = (int)$db->GetOne("SELECT", array("COUNT(DISTINCT blocknum)", "FROM" => "?", "WHERE" => "blocknum > 0 AND sharedblock = 1"), "files");
-	$numemptyfiles = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 1"), "files");
-	$numsymlinks = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink <> ''"), "files");
-	$numdirs = (int)$db->GetOne("SELECT", array("COUNT(*)", "FROM" => "?", "WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink = ''"), "files");
+	$numfiles        = (int) $db->GetOne("SELECT", array(
+		"COUNT(*)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum > 0 AND sharedblock = 0"
+	), "files");
+	$numsharedfiles  = (int) $db->GetOne("SELECT", array(
+		"COUNT(*)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum > 0 AND sharedblock = 1"
+	), "files");
+	$numsharedblocks = (int) $db->GetOne("SELECT", array(
+		"COUNT(DISTINCT blocknum)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum > 0 AND sharedblock = 1"
+	), "files");
+	$numemptyfiles   = (int) $db->GetOne("SELECT", array(
+		"COUNT(*)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum = 0 AND sharedblock = 1"
+	), "files");
+	$numsymlinks     = (int) $db->GetOne("SELECT", array(
+		"COUNT(*)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink <> ''"
+	), "files");
+	$numdirs         = (int) $db->GetOne("SELECT", array(
+		"COUNT(*)",
+		"FROM"  => "?",
+		"WHERE" => "blocknum = 0 AND sharedblock = 0 AND symlink = ''"
+	), "files");
 
 	echo "Symlinks:  " . number_format($numsymlinks, 0) . "\n";
 	echo "Folders:  " . number_format($numdirs, 0) . "\n";
@@ -318,19 +341,193 @@ function shell_cmd_stats($line) {
 	echo "\n";
 }
 
-function shell_cmd_restore($line)
-{
+function shell_cmd_users($line) {
+	global $db;
+
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules"    => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args    = ParseCommandLine($options, $line);
+
+	if (count($args["params"]) > 0 || isset($args["opts"]["help"])) {
+		echo $args["file"] . " - Users command\n";
+		echo "Purpose: Display information about users/owners in the files database and whether or not those users exist in the host system.\n";
+		echo "\n";
+		echo "Syntax: " . $args["file"] . " [options]\n";
+		echo "Options:\n";
+		echo "\t-? This help documentation.\n";
+		echo "\n";
+		echo "Example: " . $args["file"] . "\n";
+
+		return;
+	}
+
+	if (!function_exists("posix_getpwnam")) {
+		echo "[Notice] The PHP function posix_getpwnam() does not exist. The POSIX PHP extension is not enabled or not available for this OS.\n";
+	}
+
+	$result = $db->Query("SELECT", array(
+		"DISTINCT owner",
+		"FROM"     => "?",
+		"ORDER BY" => "owner"
+	), "files");
+
+	while ($row = $result->NextRow()) {
+		echo $row->owner . " - ";
+
+		if (!function_exists("posix_getpwnam")) {
+			echo "[Missing]\n";
+		} else {
+			$user = @posix_getpwnam($row - owner);
+			if ($user === false || !is_array($user)) {
+				echo "[Missing]\n";
+			} else {
+				echo "Found (" . $user["uid"] . ")\n";
+			}
+		}
+	}
+}
+
+function shell_cmd_mapuser($line) {
+	global $db;
+
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules"    => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args    = ParseCommandLine($options, $line);
+
+	if (count($args["params"]) != 2 || isset($args["opts"]["help"])) {
+		echo $args["file"] . " - Map user command\n";
+		echo "Purpose: Changes all instances of one user into another. Only affects the cached copy of the files database. Useful for adjusting users to the host prior to a restore.\n";
+		echo "\n";
+		echo "Syntax:  " . $args["file"] . " [options] srcuser destuser\n";
+		echo "Options:\n";
+		echo "\t-?   This help documentation.\n";
+		echo "\n";
+		echo "Example:  " . $args["file"] . " www www-data\n";
+
+		return;
+	}
+
+	$result = $db->Query("UPDATE", array(
+		"files",
+		array(
+			"owner" => $args["params"][1],
+		),
+		"WHERE" => "owner = ?"
+	), $args["params"][0]);
+}
+
+function shell_cmd_groups($line) {
+	global $db;
+
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules"    => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args    = ParseCommandLine($options, $line);
+
+	if (count($args["params"]) > 0 || isset($args["opts"]["help"])) {
+		echo $args["file"] . " - Groups command\n";
+		echo "Purpose:  Display information about groups in the files database and whether or not those groups exist in the host system.\n";
+		echo "\n";
+		echo "Syntax:  " . $args["file"] . " [options]\n";
+		echo "Options:\n";
+		echo "\t-?   This help documentation.\n";
+		echo "\n";
+		echo "Example:  " . $args["file"] . "\n";
+
+		return;
+	}
+
+	if (!function_exists("posix_getgrnam")) {
+		echo "[Notice] The PHP function posix_getgrnam() does not exist. The POSIX PHP extension is not enabled or not available for this OS.\n";
+	}
+
+	$result = $db->Query("SELECT", array(
+		"DISTINCT group",
+		"FROM"     => "?",
+		"ORDER BY" => "group"
+	), "files");
+
+	while ($row = $result->NextRow()) {
+		echo $row->owner . " - ";
+
+		if (!function_exists("posix_getgrnam")) {
+			echo "[Missing]\n";
+		} else {
+			$group = @posix_getgrnam($row->group);
+			if ($group === false || !is_array($group)) {
+				echo "[Missing]\n";
+			} else {
+				echo "Found (" . $group["gid"] . ")\n";
+			}
+		}
+	}
+}
+
+function shell_cmd_mapgroup($line) {
+	global $db;
+
+	$options = array(
+		"shortmap" => array(
+			"?" => "help"
+		),
+		"rules"    => array(
+			"help" => array("arg" => false)
+		)
+	);
+	$args    = ParseCommandLine($options, $line);
+
+	if (count($args["params"]) != 2 || isset($args["opts"]["help"])) {
+		echo $args["file"] . " - Map group command\n";
+		echo "Purpose:  Changes all instances of one group into another. Only affects the cached copy of the files database. Useful for adjusting groups to the host prior to a restore.\n";
+		echo "\n";
+		echo "Syntax:  " . $args["file"] . " [options] srcgroup destgroup\n";
+		echo "Options:\n";
+		echo "\t-?   This help documentation.\n";
+		echo "\n";
+		echo "Example:  " . $args["file"] . " www www-data\n";
+
+		return;
+	}
+
+	$result = $db->Query("UPDATE", array(
+		"files",
+		array(
+			"group" => $args["params"][1],
+		),
+		"WHERE" => "group = ?"
+	), $args["params"][0]);
+}
+
+
+function shell_cmd_restore($line) {
 	global $rootpath, $blocklist, $servicehelper, $config, $cb_messages;
 
 	$options = array(
 		"shortmap" => array(
 			"?" => "help"
 		),
-		"rules" => array(
+		"rules"    => array(
 			"help" => array("arg" => false)
 		)
 	);
-	$args = ParseCommandLine($options, $line);
+	$args    = ParseCommandLine($options, $line);
 
 	if (count($args["params"]) > 1 || isset($args["opts"]["help"])) {
 		echo $args["file"] . " - Restore command\n";

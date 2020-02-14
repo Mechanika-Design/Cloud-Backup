@@ -309,7 +309,7 @@ foreach ($config["backup_paths"] as $path) {
 						$numleft = (int) $db->GetOne("SELECT", array(
 							"COUNT(*)",
 							"FROM" => "?",
-							"WHERE blocknum = ?",
+							"WHERE" => "blocknum = ?",
 						), "files", $info["blocknum"]);
 					}
 
@@ -413,7 +413,7 @@ foreach ($config["backup_paths"] as $path) {
 						$numleft = (int) $db->GetOne("SELECT", array(
 							"COUNT(*)",
 							"FROM" => "?",
-							"WHERE blocknum = ?",
+							"WHERE" => "blocknum = ?",
 						), "files", $info["blocknum"]);
 					}
 
@@ -431,7 +431,7 @@ foreach ($config["backup_paths"] as $path) {
 					$stack[]  = array("path" => $path2, "pid" => $info["id"], "diff" => $diff);
 				} else if (isset($info["orig_filesize"]) || isset($info["orig_lastmodified"])) {
 					// Upload the file.
-					$servicehelper->UploadFile($id, $path . "/" . $info["name"]);
+					$servicehelper->UploadFile($info["id"], $path . "/" . $info["name"]);
 				}
 			} else {
 				array_pop($stack);

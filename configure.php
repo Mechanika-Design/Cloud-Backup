@@ -229,7 +229,7 @@ do {
 	if (count($config["notifications"])) {
 		echo "Current notifications:\n\n";
 		foreach ($config["notifications"] as $num => $notification) {
-			echo "\t[" . ($num + 1) . "] " . $notification["from"] . " via " . $notification["server"] . "\n";
+			echo "\t[" . ($num + 1) . "] " . $notification["from"] . " via " . ($notification["usemail"] ? "PHP mail()" : $notification["server"]) . "\n";
 			echo "\t\tFilter:  " . $notification["filter"] . "\n";
 			echo "\t\tSubject:  " . $notification["subject"] . "\n";
 			echo "\t\tRecipients:\n";
