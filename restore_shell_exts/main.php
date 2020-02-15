@@ -125,7 +125,7 @@ function shell_cmd_ls($line) {
 						}
 
 						if ($percentages) {
-							$percentsize = strlen(number_format(($info["compressedsize"] + 12) / $info["filesize"] * 100, 0) . "%");
+							$percentsize = strlen($info["blocknum"] > 0 ? number_format(($info["compressedsize"] + 12) / $info["filesize"] * 100, 0) . "%" : "-");
 							if ($percentsize > $maxpercentagesize) {
 								$maxpercentagesize = $percentsize;
 							}
@@ -209,7 +209,7 @@ function shell_cmd_ls($line) {
 					}
 
 					// Output:  Attributes Owner Group Created Filesize[ Blocknum]
-					echo $attr . " " . sprintf("%-" . $maxowner . "s", $info["owner"]) . " " . sprintf("%-" . $maxgroup . "s", $info["group"]) . " " . sprintf("%" . $maxfullsize . "s", number_format($info["filesize"], 0)) . ($percentages ? " " . sprintf("%" . $maxpercentagesize . "s", number_format(($info["compressedsize"] + 12) / $info["filesize"] * 100, 0) . "%") : "") . ($blocks ? " " . sprintf("%" . $maxblocknumsize . "s", $info["blocknum"]) : "") . " " . date("Y-M-d h:i A", $info["created"]) . "  ";
+					echo $attr . " " . sprintf("%-" . $maxowner . "s", $info["owner"]) . " " . sprintf("%-" . $maxgroup . "s", $info["group"]) . " " . sprintf("%" . $maxfullsize . "s", number_format($info["filesize"], 0)) . ($percentages ? " " . sprintf("%" . $maxpercentagesize . "s", ($info["blocknum"] > 0 ? number_format(($info["compressedsize"] + 12) / $info["filesize"] * 100, 0) . "%") : "-") : "") . ($blocks ? " " . sprintf("%" . $maxblocknumsize . "s", $info["blocknum"]) : "") . " " . date("Y-M-d h:i A", $info["created"]) . "  ";
 				}
 
 				echo $name;
