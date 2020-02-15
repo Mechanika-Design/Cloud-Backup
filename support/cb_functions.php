@@ -234,6 +234,7 @@ function CB_GetDBFiles($pid, $fordiff = true) {
 			"owner"        => $row->owner,
 			"group"        => $row->group,
 			"filesize"     => ($fordiff ? $row->filesize : $row->realfilesize),
+			"compressedsize" => $row->compressedsize,
 			"lastmodified" => $row->lastmodified,
 			"created"      => $row->created,
 		);
@@ -567,6 +568,7 @@ class CB_ServiceHelper {
 			$this->deflate->Init("wb");
 			$stagingdata = "";
 			$filesize    = $realfilesize;
+			$compressedsize = 0;
 			$nextpart    = 0;
 			while ($filesize) {
 				$data = fread($fp, ($filesize >= 1048576 ? 1048576 : $filesize));
@@ -578,7 +580,9 @@ class CB_ServiceHelper {
 
 				if ($data !== "") {
 					$this->deflate->Write($data);
-					$stagingdata .= $this->deflate->Read();
+					$data2 = $this->deflate->Read();
+					$compressedsize += strlen($data2);
+					$stagingdata .= $data2;
 
 					if (strlen($stagingdata) > $this->config["smallfilelimit"]) {
 						$shared = false;
@@ -590,7 +594,9 @@ class CB_ServiceHelper {
 
 			// Last data chunk.
 			$this->deflate->Finalize();
-			$stagingdata .= $this->deflate->Read();
+			$data2 = $this->deflate->Read();
+			$compressedsize += strlen($data2);
+			$stagingdata .= $data2;
 			if ($stagingdata !== "") {
 				if (strlen($stagingdata) > $this->config["smallfilelimit"]) {
 					$shared = false;
@@ -623,6 +629,7 @@ class CB_ServiceHelper {
 						"blocknum"     => ($realfilesize ? $this->sharedblocknum : 0),
 						"sharedblock"  => "1",
 						"realfilesize" => $realfilesize,
+						"compressedsize" => $compressedsize,
 					),
 					"WHERE" => "id = ?"
 				), $id);
@@ -632,6 +639,7 @@ class CB_ServiceHelper {
 					array(
 						"blocknum"     => $this->nextblock,
 						"realfilesize" => $realfilesize,
+						"compressedsize" => $compressedsize,
 					),
 					"WHERE" => "id = ?"
 				), $id);
