@@ -3,10 +3,10 @@
 // SMTP e-mail functions.
 
 // Load dependencies.
-if (!class_exists("UTF8")) {
+if (!class_exists("UTF8", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/utf8.php";
 }
-if (!class_exists("IPAddr")) {
+if (!class_exists("IPAddr", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/ipaddr.php";
 }
 
@@ -487,7 +487,7 @@ class SMTP {
 	), $cache = true
 	) {
 		// Check for a mail server based on a DNS lookup.
-		if (!class_exists("Net_DNS2_Resolver")) {
+		if (!class_exists("Net_DNS2_Resolver", false)) {
 			require_once str_replace("\\", "/", dirname(__FILE__)) . "/Net/DNS2.php";
 		}
 
@@ -1568,7 +1568,7 @@ class SMTP {
 		self::$depths = array();
 
 		// Load TagFilter.
-		if (!class_exists("TagFilter")) {
+		if (!class_exists("TagFilter", false)) {
 			require_once str_replace("\\", "/", dirname(__FILE__)) . "/tag_filter.php";
 		}
 

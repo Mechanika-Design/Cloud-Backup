@@ -2099,11 +2099,10 @@ class HTTP {
 						if (is_string($val) || is_numeric($val)) {
 							$val = array($val);
 						} else {
-							return array(
-								"success"   => false,
-								"error"     => "A supplied 'postvars' value is an invalid type.  Expected string, numeric, or array.",
-								"errorcode" => "invalid_postvars_value",
-								"info"      => array("name" => $name, "val" => $val)
+							return array("success"   => false,
+							             "error"     => "A supplied 'postvars' value is an invalid type.  Expected string, numeric, or array.",
+							             "errorcode" => "invalid_postvars_value",
+							             "info"      => array("name" => $name, "val" => $val)
 							);
 						}
 					}
@@ -2153,11 +2152,10 @@ class HTTP {
 						if (is_string($val) || is_numeric($val)) {
 							$val = array($val);
 						} else {
-							return array(
-								"success"   => false,
-								"error"     => "A supplied 'postvars' value is an invalid type.  Expected string, numeric, or array.",
-								"errorcode" => "invalid_postvars_value",
-								"info"      => array("name" => $name, "val" => $val)
+							return array("success"   => false,
+							             "error"     => "A supplied 'postvars' value is an invalid type.  Expected string, numeric, or array.",
+							             "errorcode" => "invalid_postvars_value",
+							             "info"      => array("name" => $name, "val" => $val)
 							);
 						}
 					}
