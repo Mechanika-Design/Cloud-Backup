@@ -400,7 +400,7 @@ function shell_cmd_mapuser($line) {
 		return;
 	}
 
-	$result = $db->Query("UPDATE", array(
+	$db->Query("UPDATE", array(
 		"files",
 		array(
 			"owner" => $args["params"][1],
@@ -487,7 +487,7 @@ function shell_cmd_mapgroup($line) {
 		return;
 	}
 
-	$result = $db->Query("UPDATE", array(
+	$db->Query("UPDATE", array(
 		"files",
 		array(
 			"group" => $args["params"][1],
