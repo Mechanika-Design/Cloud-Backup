@@ -258,9 +258,7 @@ $exclusions[$rootpath . "/files2.db-journal"]        = true;
 $exclusions[$rootpath . "/support/cb_functions.php"] = true;
 foreach ($config["backup_exclusions"] as $path) {
 	$path = realpath($path);
-	if ($path !== false) {
-		$exclusions[$path] = true;
-	}
+	if ($path !== false)  $exclusions[str_replace("\\", "/", $path)] = true;
 }
 
 // Start the service.

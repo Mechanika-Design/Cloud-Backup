@@ -35,7 +35,7 @@ class AmazonCloudDrive {
 	public function SetClientInfo($info) {
 		$this->data = array_merge($this->data, $info);
 
-		// Default CubicleSoft client ID and "secret" (Cloud Drive Management).  Improper use can lead to cross-domain MITM issues.
+		// Default Mechanika Design client ID and "secret" (Cloud Drive Management).  Improper use can lead to cross-domain MITM issues.
 		if ($this->data["clientid"] === false || $this->data["clientsecret"] === false) {
 			$this->data["clientid"]         = "amzn1.application-oa2-client.3bf6aa83a94e482f8d27baff6425f363";
 			$this->data["clientsecret"]     = "8fc02cd959be668f23a5253fe755a3cabc06f939b1e8beab07f3e5da7fd8c24d";
