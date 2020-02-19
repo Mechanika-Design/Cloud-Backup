@@ -2,10 +2,10 @@
 // OpenDrive SDK class.
 
 // Load dependencies.
-if (!class_exists("HTTP")) {
+if (!class_exists("HTTP", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/http.php";
 }
-if (!class_exists("WebBrowser")) {
+if (!class_exists("WebBrowser", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/web_browser.php";
 }
 

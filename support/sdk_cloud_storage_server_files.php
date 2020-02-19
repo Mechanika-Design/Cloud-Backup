@@ -3,10 +3,10 @@
 // Cloud Storage Server files SDK class.
 
 // Load dependencies.
-if (!class_exists("HTTP")) {
+if (!class_exists("HTTP", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/http.php";
 }
-if (!class_exists("WebBrowser")) {
+if (!class_exists("WebBrowser", false)) {
 	require_once str_replace("\\", "/", dirname(__FILE__)) . "/web_browser.php";
 }
 
@@ -261,9 +261,10 @@ class CloudStorageServerFiles {
 		} else {
 			$fp = (is_resource($destfileorfp) ? $destfileorfp : fopen($destfileorfp, "wb"));
 			if ($fp === false) {
-				return array("success"   => false,
-				             "error"     => self::CSS_Translate("Invalid destination filename or handle."),
-				             "errorcode" => "invalid_filename_or_handle"
+				return array(
+					"success"   => false,
+					"error"     => self::CSS_Translate("Invalid destination filename or handle."),
+					"errorcode" => "invalid_filename_or_handle"
 				);
 			}
 
@@ -367,15 +368,17 @@ class CloudStorageServerFiles {
 
 	private function RunAPI($method, $apipath, $options = array(), $expected = 200, $encodejson = true, $decodebody = true) {
 		if ($this->host === false || $this->apikey === false) {
-			return array("success"   => false,
-			             "error"     => self::CSS_Translate("Missing host or API key."),
-			             "errorcode" => "no_access_info"
+			return array(
+				"success"   => false,
+				"error"     => self::CSS_Translate("Missing host or API key."),
+				"errorcode" => "no_access_info"
 			);
 		}
 		if ($this->cafile === false || $this->cert === false) {
-			return array("success"   => false,
-			             "error"     => self::CSS_Translate("Missing SSL Certificate or Certificate Authority filename.  Call GetSSLInfo() to initialize for the first time and be sure to save the results."),
-			             "errorcode" => "critical_ssl_info_missing"
+			return array(
+				"success"   => false,
+				"error"     => self::CSS_Translate("Missing SSL Certificate or Certificate Authority filename.  Call GetSSLInfo() to initialize for the first time and be sure to save the results."),
+				"errorcode" => "critical_ssl_info_missing"
 			);
 		}
 
@@ -436,10 +439,11 @@ class CloudStorageServerFiles {
 		}
 
 		if ($result["response"]["code"] != $expected) {
-			return array("success"   => false,
-			             "error"     => self::CSS_Translate("Expected a %d response from Cloud Storage Server.  Received '%s'.", $expected, $result["response"]["line"]),
-			             "errorcode" => "unexpected_cloud_storage_server_response",
-			             "info"      => $result
+			return array(
+				"success"   => false,
+				"error"     => self::CSS_Translate("Expected a %d response from Cloud Storage Server.  Received '%s'.", $expected, $result["response"]["line"]),
+				"errorcode" => "unexpected_cloud_storage_server_response",
+				"info"      => $result
 			);
 		}
 
