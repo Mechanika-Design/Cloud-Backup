@@ -195,7 +195,7 @@ class CB_Service_local {
 
 	public function GetIncrementalBlockList($id) {
 		if (isset($this->incrementals[$id])) {
-			$id = isset($this->incrementals[$id]);
+			$id = $this->incrementals[$id];
 		}
 		$result = $this->GetFolderList($this->remotebasefolder . "/" . $id);
 		if (!$result["success"]) {
